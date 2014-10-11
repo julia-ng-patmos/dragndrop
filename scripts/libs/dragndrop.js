@@ -11,6 +11,7 @@ app.controller("DragDropCtrl", function ($scope) {
 
 app.directive('draggable', function () {
     return function (scope, element) {
+        element.css({cursor: "pointer"});
         var el = element[0];
         var crt;
 
@@ -19,6 +20,7 @@ app.directive('draggable', function () {
         el.addEventListener(
             'dragstart',
             function (e) {
+                console.dir(el)
                 e.dataTransfer.effectAllowed = 'move';
                 e.dataTransfer.setData('text', this.id);
                 crt = this.cloneNode(true);
@@ -27,12 +29,17 @@ app.directive('draggable', function () {
                         miPadre: el.parentNode
                     };
                 }
+
+                /******* CSS For The Clone Node  ******
+                 **************************************/
                 this.style.opacity = "0";
                 crt.style.position = "absolute";
+                crt.style.width = el.offsetWidth + "px";
                 crt.style.top = "30%";
                 crt.style.right = "50%";
-                crt.style.height = "150px";
                 crt.style.zIndex = "-100";
+                crt.style.backgroundSize = "100% 100%";
+                /****************************************/
                 document.body.appendChild(crt);
                 e.dataTransfer.setDragImage(crt, 0, 0);
                 if (!e.target.dragactive) {
@@ -90,8 +97,6 @@ app.directive("droppable", function () {
                 'dragleave',
                 function (e) {
                     this.classList.remove("over");
-                    console.dir(el);
-                    console.dir(e);
                     if (e.target.dragactive) {
                         if (this.firstChild != null) {
                             this.removeChild(this.firstChild)
