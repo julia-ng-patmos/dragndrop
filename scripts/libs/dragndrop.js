@@ -13,34 +13,31 @@ app.directive('draggable', function () {
     return function (scope, element) {
         var el = element[0];
         var crt;
-        var trick;
 
         el.draggable = true;
 
         el.addEventListener(
             'dragstart',
             function (e) {
-                /*********************************************/
-                trick = document.createElement("div");
-                trick.id = "coverup";
-                trick.style.background = "white";
-                trick.style.position = "absolute";
-                trick.style.top = "0px";
-                trick.style.right = "0px";
-                trick.style.width = "6%";
-                trick.style.height = "6%";
-                trick.style.zIndex = "2";
-                /**********************************************/
-                document.body.appendChild(trick);
                 e.dataTransfer.effectAllowed = 'move';
-                e.dataTransfer.setData('Text', this.id);
+                e.dataTransfer.setData('text', this.id);
                 crt = this.cloneNode(true);
+                if (!el.estado) {
+                    el.estado = {
+                        miPadre: el.parentNode
+                    };
+                }
                 this.style.opacity = "0";
                 crt.style.position = "absolute";
-                crt.style.top = "0px";
-                crt.style.right = "0px";
+                crt.style.top = "30%";
+                crt.style.right = "50%";
+                crt.style.height = "150px";
+                crt.style.zIndex = "-100";
                 document.body.appendChild(crt);
                 e.dataTransfer.setDragImage(crt, 0, 0);
+                if (!e.target.dragactive) {
+                    e.target.dragactive = true
+                }
 
                 return false;
             },
@@ -52,7 +49,6 @@ app.directive('draggable', function () {
             function (e) {
                 this.style.opacity = "1";
                 document.body.removeChild(crt);
-                document.body.removeChild(trick);
                 return false;
             },
             false
@@ -94,6 +90,17 @@ app.directive("droppable", function () {
                 'dragleave',
                 function (e) {
                     this.classList.remove("over");
+                    console.dir(el);
+                    console.dir(e);
+                    if (e.target.dragactive) {
+                        if (this.firstChild != null) {
+                            this.removeChild(this.firstChild)
+                        }
+                        if (e.target.estado) {
+                            e.target.estado.miPadre.appendChild(e.target)
+                        }
+                        el.ocupado = false;
+                    }
                     return false;
                 },
                 false
@@ -107,8 +114,20 @@ app.directive("droppable", function () {
                     this.classList.remove("over");
 
                     var binId = this.id;
-                    var item = document.getElementById(e.dataTransfer.getData("Text"));
-                    this.appendChild(item);
+                    var respu = document.createTextNode(e.dataTransfer.getData("text"));
+                    var item = document.getElementById(e.dataTransfer.getData("text"));
+                    if (!el.ocupado) {
+                        this.appendChild(respu);
+                        this.appendChild(item);
+                        el.ocupado = true;
+                    } else {
+                        this.removeChild(this.firstChild);
+                        var oldElement = this.firstChild;
+                        oldElement.estado.miPadre.appendChild(oldElement);
+                        this.appendChild(respu);
+                        this.appendChild(item);
+                    }
+                    item.dragactive = false;
 
                     // call the drop passed drop function
                     scope.$apply(function (scope) {
@@ -118,6 +137,7 @@ app.directive("droppable", function () {
                         }
                     });
 
+                    e.preventDefault();
                     return false;
                 },
                 false
